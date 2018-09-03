@@ -11,12 +11,15 @@ import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity {
     private Loader<Integer> loaderColor;
+    private Loader<List<ItemEntity>> loaderItems;
     private MyAsyncTask myAsyncTask;
     private Fragment3 fragment3;
     private MyFragmentCallbacks<Integer> colorFragmentCallback;
-    private MyFragmentCallbacks<Integer> integerFragmentCallbacks;
+    private MyFragmentCallbacks<List<ItemEntity>> itemFragmentCallbacks;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,8 +46,11 @@ public class MainActivity extends AppCompatActivity {
         fragmentTransaction.add(R.id.frame3,fragment3);
         fragmentTransaction.commit();
         loaderColor = getSupportLoaderManager().initLoader(MyLoaderCallback.LOADER_ID, null, new MyLoaderCallback());
+        loaderItems = getSupportLoaderManager().initLoader(RecyclerLoaderCallback.LOADER_ID, null, new RecyclerLoaderCallback());
         colorFragmentCallback = fragment1;
+        itemFragmentCallbacks = fragment2;
         loaderColor.forceLoad();
+        loaderItems.forceLoad();
         if(myAsyncTask == null) {
             myAsyncTask = new MyAsyncTask();
             myAsyncTask.execute();
@@ -81,7 +87,31 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private class RecyclerLoaderCallback implements LoaderManager.LoaderCallbacks<List<ItemEntity>> {
+        static final int LOADER_ID = 2000;
+
+        @NonNull
+        @Override
+        public Loader<List<ItemEntity>> onCreateLoader(int i, @Nullable Bundle bundle) {
+            if(i ==LOADER_ID)
+                return new RecyclerLoader(MainActivity.this);
+            return null;
+        }
+
+        @Override
+        public void onLoadFinished(@NonNull Loader<List<ItemEntity>> loader, List<ItemEntity> itemEntities) {
+            itemFragmentCallbacks.onReceive(itemEntities);
+            loaderItems.forceLoad();
+        }
+
+        @Override
+        public void onLoaderReset(@NonNull Loader<List<ItemEntity>> loader) {
+
+        }
+    }
+
     public Fragment3 getFragment3() {
         return fragment3;
     }
 }
+
